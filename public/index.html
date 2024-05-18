@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin: 0 auto;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #bar-graph, #scatter-plot {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Analysis</h1>
+    <div id="data"></div>
+    <div id="route-counts"></div>
+    <div id="graphs">
+        <div id="bar-graph"></div>
+        <div id="scatter-plot"></div>
+    </div>
+
+    <script>
+        // Function to fetch data from the server
+        async function fetchData() {
+            try {
+                const response = await fetch('http://localhost:3000/data');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                throw error;
+            }
+        }
+
+        // Function to display data in table format
+        function displayData(data) {
+            const dataTable = document.getElementById('data');
+            let html = '<h2>Data Table</h2>';
+            html += '<table>';
+            html += '<tr><th>X Value</th><th>Y Value</th><th>Route</th></tr>';
+            data.forEach(item => {
+                html += `<tr><td>${item.x}</td><td>${item.y}</td><td>${item.route}</td></tr>`;
+            });
+            html += '</table>';
+            dataTable.innerHTML = html;
+        }
+
+        // Function to analyze data
+        function analyzeData(data) {
+            const routes = data.map(item => item.route);
+            const routeCounts = routes.reduce((acc, curr) => {
+                acc[curr] = (acc[curr] || 0) + 1;
+                return acc;
+            }, {});
+
+            return { data, routeCounts };
+        }
+
+        // Function to display route counts
+        function displayRouteCounts(routeCounts) {
+            const routeCountsContainer = document.getElementById('route-counts');
+            let html = '<h2>Route Counts</h2>';
+            html += '<table>';
+            html += '<tr><th>Route</th><th>Count</th></tr>';
+            for (const route in routeCounts) {
+                html += `<tr><td>${route}</td><td>${routeCounts[route]}</td></tr>`;
+            }
+            html += '</table>';
+            routeCountsContainer.innerHTML = html;
+        }
+
+        // Function to display bar graph
+        function displayBarGraph(routeCounts) {
+            const routes = Object.keys(routeCounts);
+            const counts = Object.values(routeCounts);
+
+            const data = [{
+                x: routes,
+                y: counts,
+                type: 'bar'
+            }];
+
+            const layout = {
+                title: 'Route Counts',
+                xaxis: { title: 'Routes' },
+                yaxis: { title: 'Counts' }
+            };
+
+            Plotly.newPlot('bar-graph', data, layout);
+        }
+
+        // Function to display scatter plot
+        function displayScatterPlot(data) {
+            const xValues = data.map(item => parseFloat(item.x));
+            const yValues = data.map(item => parseFloat(item.y));
+
+            const layout = {
+                title: 'Scatter Plot (X and Y coordinates)',
+                xaxis: { title: 'X Values' },
+                yaxis: { title: 'Y Values' }
+            };
+
+            const trace = {
+                x: xValues,
+                y: yValues,
+                mode: 'markers',
+                type: 'scatter'
+            };
+
+            Plotly.newPlot('scatter-plot', [trace], layout);
+        }
+
+        // Main function to fetch, analyze, and display data
+        async function main() {
+            try {
+                const data = await fetchData();
+                const { routeCounts } = analyzeData(data);
+                displayData(data);
+                displayRouteCounts(routeCounts);
+                displayBarGraph(routeCounts);
+                displayScatterPlot(data);
+            } catch (error) {
+                console.error("Error fetching or displaying data:", error);
+            }
+        }
+
+        // Call the main function when the page loads
+        window.onload = main;
+    </script>
+</body>
+</html>
