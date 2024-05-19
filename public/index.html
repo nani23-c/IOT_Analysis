@@ -8,7 +8,6 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
         }
@@ -20,8 +19,6 @@
             border-collapse: collapse;
             width: 80%;
             margin: 0 auto;
-            background-color: #fff;
-            border: 1px solid #ddd;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -36,14 +33,20 @@
         #bar-graph, #scatter-plot {
             width: 80%;
             margin: 20px auto;
-            background-color: #fff;
-            border: 1px solid #ddd;
             border-radius: 5px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        /* Theme-based background colors */
+        .light-theme {
+            background-color: #f4f4f4;
+        }
+        .dark-theme {
+            background-color: #333;
+            color: #fff;
+        }
     </style>
 </head>
-<body>
+<body class="light-theme">
     <h1>Data Analysis</h1>
     <div id="data"></div>
     <div id="route-counts"></div>
@@ -57,7 +60,11 @@
         async function fetchData() {
             try {
                 const response = await fetch('http://localhost:3000/data');
-                const data = await response.json();
+                let data = await response.json();
+
+                // Filter out records with empty route cells
+                data = data.filter(item => item.route.trim() !== '');
+
                 return data;
             } catch (error) {
                 console.error("Error fetching data:", error);
